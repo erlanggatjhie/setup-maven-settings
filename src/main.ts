@@ -1,16 +1,38 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import fs from 'fs'
+import {json2xml} from 'xml-js'
+import os from 'os'
+import path from 'path'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    const activeProfiles = JSON.parse(core.getInput('activeProfiles') ?? '[]')
+    const profiles = JSON.parse(core.getInput('profiles') ?? '[]')
+    const servers = JSON.parse(core.getInput('servers') ?? '[]')
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const settingsPath = path.join(os.homedir(), '.m2', 'settings.xml')
 
-    core.setOutput('time', new Date().toTimeString())
+    const settings = {
+      activeProfiles: activeProfiles.map((activeProfile: unknown) => ({
+        activeProfile
+      })),
+      profiles: profiles.map((profile: unknown) => ({profile})),
+      servers: servers.map((server: unknown) => ({server}))
+    }
+
+    // core.setOutput('time', new Date().toTimeString())
+    if (!fs.existsSync(path.dirname(settingsPath))) {
+      fs.mkdirSync(path.dirname(settingsPath))
+    }
+    const settingsXml = json2xml(JSON.stringify(settings), {
+      compact: true
+    })
+    fs.writeFileSync(
+      settingsPath,
+      `<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">${settingsXml}</settings>`
+    )
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

@@ -1,11 +1,15 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Setup Maven Settings'
+description: 'Setup maven settings.xml'
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  activeProfiles:
+    description: 'List of active profiles in json array format, eg: ["profile1,profile2"]'
+    required: false
+  profiles:
+    description: 'List of profiles in json format, eg: [{ "id": "profile1", "repositories": [{ "id": "repository1", "url": "url1" }, { "id": "repository2", "url": "url2" }] }]'
+    required: false
+  servers:
+    description: 'List of servers in json format, eg: [{ "id": "profile1", "username": "username", "password": "password" }]'
+    required: false
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
